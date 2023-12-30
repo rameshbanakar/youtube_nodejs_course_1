@@ -26,6 +26,15 @@ exports.getAllMovies = async (req, res) => {
       const seletFiled = req.query.fields.split(",").join(" ");
       query = query.select(seletFiled);
     }
+
+    let limit=req.query.limit*1 ||10
+    console.log(limit)
+    let page=req.query.page*1 ||1
+    console.log(page)
+    let skipping=limit*page
+    console.log(skipping)
+    query = query.skip(skipping).limit(limit);
+
     const movies = await query;
     res.send(movies);
   } catch (error) {
