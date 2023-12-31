@@ -16,23 +16,23 @@ exports.getAllMovies = async (req, res) => {
     querystr = querystr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`);
     queryObj = JSON.parse(querystr);
 
-    let query =  Movies.find(queryObj);
-    if(req.query.sort){
-      const sortBy = req.query.sort.split(",").join(" ")
+    let query = Movies.find(queryObj);
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
       query = query.sort(sortBy);
     }
 
-    if(req.query.fields){
+    if (req.query.fields) {
       const seletFiled = req.query.fields.split(",").join(" ");
       query = query.select(seletFiled);
     }
 
-    let limit=req.query.limit*1 ||10
-    console.log(limit)
-    let page=req.query.page*1 ||1
-    console.log(page)
-    let skipping=limit*page
-    console.log(skipping)
+    let limit = req.query.limit * 1 || 10;
+
+    let page = req.query.page * 1 || 1;
+
+    let skipping = limit * (page - 1);
+
     query = query.skip(skipping).limit(limit);
 
     const movies = await query;
@@ -77,6 +77,28 @@ exports.updateMovies = (req, res) => {
     updatedMovie = Object.assign(movieToUpdate, req.body);
     data[movieIndex] = updatedMovie;
     res.send(updatedMovie);
+  } catch (error) {
+    res.send(error.message);
+  }
+};
+
+exports.movieStat = async (req, res) => {
+  try {
+    const movie = await Movies.aggregate([
+      { $match: { ratings: { $gte: 4.5 } } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: "$ratings" },
+          minRating: { $min: "$ratings" },
+          maxRating: { $max: "$ratings" },
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" }
+        },
+      },
+    ]);
+    res.send(movie);
   } catch (error) {
     res.send(error.message);
   }
