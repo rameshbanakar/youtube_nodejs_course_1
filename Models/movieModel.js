@@ -53,5 +53,11 @@ const movieSchema = new mongoose.Schema(
 movieSchema.virtual("durationInHours").get(function () {
   return this.duration / 60;
 });
+
+//this middleware will be called before the saving the data into database
+movieSchema.pre("save", function (next) {
+  console.log(this);
+  next();
+});
 const movieModel = mongoose.model("movies", movieSchema);
 module.exports = movieModel;
