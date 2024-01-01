@@ -4,6 +4,11 @@ const movieSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required filed please provide the movie name"],
+      minLength: [4, "mininmum length of the name should be 4 char"],
+      maxLength: [
+        50,
+        "maximunm length of the movie name should be less then the 50 char",
+      ],
       unique: true,
     },
     description: {
@@ -15,6 +20,12 @@ const movieSchema = new mongoose.Schema(
     },
     ratings: {
       type: Number,
+      validate: {
+        validator: function (value) {
+          return value >= 1 && value <= 10;
+        },
+        message:"rating should be in between the 1 and 10"
+      },
     },
     totalRating: {
       type: Number,
@@ -31,6 +42,18 @@ const movieSchema = new mongoose.Schema(
     },
     genres: {
       type: [String],
+      // enum: {
+      //   values: [
+      //     "Action",
+      //     "sci-fi",
+      //     "comedy",
+      //     "Adventurious",
+      //     "thriller",
+      //     "Drama",
+      //     "Romance"
+      //   ],
+      //   message: "selected genres is not valid",
+      // },
     },
     directors: {
       type: [String],
@@ -73,7 +96,6 @@ movieSchema.post("find", function (next) {
   console.log(
     `time taken to fetch the data ${this.endTIme - this.startTime} milliseconds`
   );
- 
 });
 const movieModel = mongoose.model("movies", movieSchema);
 module.exports = movieModel;

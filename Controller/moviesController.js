@@ -38,7 +38,10 @@ exports.getAllMovies = async (req, res) => {
     const movies = await query;
     res.send(movies);
   } catch (error) {
-    res.send(error.message);
+    res.send({
+      status: "failed",
+      message: error.message,
+    });
   }
 };
 
@@ -47,7 +50,10 @@ exports.getMoviesById = async(req, res) => {
     const movie=await Movies.findById(req.params.id)
     res.send(movie);
   } catch (error) {
-    res.send(error.message);
+    res.send({
+      status: "failed",
+      message: error.message,
+    });
   }
 };
 
@@ -58,7 +64,10 @@ exports.addNewMovie = async (req, res) => {
     await movie.save();
     res.send(newMovie);
   } catch (error) {
-    res.send(error.message);
+    res.send({
+      status: "failed",
+      message: error.message,
+    });
   }
 };
 
@@ -74,7 +83,10 @@ exports.updateMovies = (req, res) => {
     data[movieIndex] = updatedMovie;
     res.send(updatedMovie);
   } catch (error) {
-    res.send(error.message);
+    res.send({
+      status:"failed",
+      message:error.message
+    });
   }
 };
 
@@ -96,6 +108,9 @@ exports.movieStat = async (req, res) => {
     ]);
     res.send(movie);
   } catch (error) {
-    res.send(error.message);
+    res.send({
+      status: "failed",
+      message: error.message,
+    });
   }
 };
