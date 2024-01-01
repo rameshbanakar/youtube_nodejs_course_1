@@ -42,14 +42,10 @@ exports.getAllMovies = async (req, res) => {
   }
 };
 
-exports.getMoviesById = (req, res) => {
+exports.getMoviesById = async(req, res) => {
   try {
-    let id = parseInt(req.params.id);
-    filted_movie = data.find((el) => el.id === id);
-    if (!filted_movie) {
-      res.status(404).send("movie not found with the id " + id);
-    }
-    res.send(filted_movie);
+    const movie=await Movies.findById(req.params.id)
+    res.send(movie);
   } catch (error) {
     res.send(error.message);
   }

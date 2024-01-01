@@ -44,6 +44,9 @@ const movieSchema = new mongoose.Schema(
     price: {
       type: Number,
     },
+    createdBy: {
+      type: String,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -56,8 +59,21 @@ movieSchema.virtual("durationInHours").get(function () {
 
 //this middleware will be called before the saving the data into database
 movieSchema.pre("save", function (next) {
-  console.log(this);
+  this.createdBy = "Ramesh S B";
   next();
+});
+
+movieSchema.pre("find", function (next) {
+  this.find({ releaseDate: { $lte: Date.now() } });
+  this.startTime = Date.now();
+  next();
+});
+movieSchema.post("find", function (next) {
+  this.endTime = Date.now();
+  console.log(
+    `time taken to fetch the data ${this.endTIme - this.startTime} milliseconds`
+  );
+ 
 });
 const movieModel = mongoose.model("movies", movieSchema);
 module.exports = movieModel;
