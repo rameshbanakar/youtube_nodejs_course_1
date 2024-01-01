@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 const movieSchema = new mongoose.Schema(
   {
     name: {
@@ -10,6 +11,7 @@ const movieSchema = new mongoose.Schema(
         "maximunm length of the movie name should be less then the 50 char",
       ],
       unique: true,
+      validate: [validator.isAlpha, "name should be only alphabatic"],
     },
     description: {
       type: String,
@@ -24,7 +26,7 @@ const movieSchema = new mongoose.Schema(
         validator: function (value) {
           return value >= 1 && value <= 10;
         },
-        message:"rating should be in between the 1 and 10"
+        message: "rating should be in between the 1 and 10",
       },
     },
     totalRating: {
