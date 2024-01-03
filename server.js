@@ -3,6 +3,7 @@ const app = express();
 const dotenv = require("dotenv");
 const connectDb = require("./db");
 const moviesRouter = require("./Router/moviesRouter");
+const authRouter=require("./Router/userRouter")
 const customError = require("./Utils/customError");
 const globalErrorHandler=require("./Controller/errorHandler")
 dotenv.config({ path: "./config/config.env" });
@@ -10,6 +11,7 @@ connectDb();
 app.use(express.json());
 app.use(express.static("./public"));
 app.use("/api/movies", moviesRouter);
+app.use("/api/users", authRouter);
 app.all("*", (req, res, next) => {
   //res.status(404).send("404 Error page not found");
   // const err=new Error("cann't find the page")
