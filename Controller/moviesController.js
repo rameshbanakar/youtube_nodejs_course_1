@@ -9,6 +9,7 @@ exports.validateBody = (req, res, next) => {
   }
   next();
 };
+
 exports.getAllMovies = async (req, res) => {
   try {
     let filterTheMovies = req.query;
