@@ -1,10 +1,10 @@
 const User = require("../Models/userModel");
-exports.signupUser = async (req, res) => {
+exports.signupUser = async (req, res,next) => {
   try {
     let newUser = req.body;
     let user = new User(newUser);
     await user.save();
-    res.send({
+    res.status(201).send({
       status: "success",
       data: user,
     });
