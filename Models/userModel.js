@@ -41,9 +41,16 @@ userSchema.pre("save", async function (next) {
     next()
   }
 });
-userSchema.methods.isPasswordChangedAt = async function (timeStamp) {
+userSchema.methods.isPasswordChangedAt = function (timeStamp) {
   if (this.passwordChangedAt) {
-    console.log(this.passwordChangedAt.getTime(), timeStamp);
+    let passwordChangeTimeStamp=parseInt(this.passwordChangedAt.getTime()/1000,10)
+    if (passwordChangeTimeStamp>timeStamp){
+     
+      return true
+    }
+    if (passwordChangeTimeStamp < timeStamp) {
+      return false
+    }
   }
   return false;
 };

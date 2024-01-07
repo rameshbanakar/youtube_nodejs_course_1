@@ -1,8 +1,8 @@
 const User = require("../Models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const custumError=require("./errorHandler")
-const util=require("util")
+const custumError = require("./errorHandler");
+const util = require("util");
 exports.signupUser = async (req, res, next) => {
   try {
     let newUser = req.body;
@@ -49,36 +49,39 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.protect=async(req,res,next)=>{
+exports.protect = async (req, res, next) => {
   try {
-     let token;
+    let token;
 
-     //1.read the token and check if it xist
-     const testToken = req.headers.authorization;
+    //1.read the token and check if it xist
+    const testToken = req.headers.authorization;
 
-     if (testToken && testToken.startsWith("bearer")) {
-       token = testToken.split(" ")[1];
-     }
-     if (!testToken) {
-       return res.status(401).send("you are not logged in");
-     }
+    if (testToken && testToken.startsWith("Bearer")) {
+      token = testToken.split(" ")[1];
+    }
+    if (!testToken) {
+      return res.status(401).send("you are not logged in");
+    }
 
-     let decode = await util.promisify(jwt.verify)(
-       token,
-       process.env.SECRET_STRING
-     );
-    
-     const userId=decode.id
-     const user=await User.findById(userId);
-     if(!user){
-      return res.send("user with the given token doesn't exist")
-     }
-    
-     user.isPasswordChangedAt(decode.iat);
-    
-     next();
+    let decode = await util.promisify(jwt.verify)(
+      token,
+      process.env.SECRET_STRING
+    );
+
+    const userId = decode.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.send("user with the given token doesn't exist");
+    }
+    if (user.isPasswordChangedAt(decode.iat)) {
+      return res
+        .status(401)
+        .send("password has changed recently,Please login again");
+    }
+    req.user = user;
+
+    next();
   } catch (error) {
-    return res.send(error.message)
+    return res.send(error.message);
   }
- 
-}
+};
