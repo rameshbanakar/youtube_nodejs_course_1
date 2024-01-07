@@ -1,6 +1,8 @@
 const User = require("../Models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const custumError=require("./errorHandler")
+const util=require("util")
 exports.signupUser = async (req, res, next) => {
   try {
     let newUser = req.body;
@@ -12,6 +14,7 @@ exports.signupUser = async (req, res, next) => {
     res.status(201).send({
       status: "success",
       token: token,
+      data: user,
     });
   } catch (error) {
     res.send({
@@ -23,7 +26,7 @@ exports.signupUser = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     let { email, password } = req.body;
-    let userFind = await User.findOne({ email });
+    let userFind = await User.findOne({ email }).select("+password");
     if (!userFind) {
       res.status(404).send("user account doesn't exist");
     }
@@ -37,6 +40,7 @@ exports.login = async (req, res, next) => {
     res.status(201).send({
       status: "success",
       token: token,
+      data: userFind,
     });
   } catch (error) {
     res.send({
@@ -44,3 +48,37 @@ exports.login = async (req, res, next) => {
     });
   }
 };
+
+exports.protect=async(req,res,next)=>{
+  try {
+     let token;
+
+     //1.read the token and check if it xist
+     const testToken = req.headers.authorization;
+
+     if (testToken && testToken.startsWith("bearer")) {
+       token = testToken.split(" ")[1];
+     }
+     if (!testToken) {
+       return res.status(401).send("you are not logged in");
+     }
+
+     let decode = await util.promisify(jwt.verify)(
+       token,
+       process.env.SECRET_STRING
+     );
+    
+     const userId=decode.id
+     const user=await User.findById(userId);
+     if(!user){
+      return res.send("user with the given token doesn't exist")
+     }
+    
+     user.isPasswordChangedAt(decode.iat);
+    
+     next();
+  } catch (error) {
+    return res.send(error.message)
+  }
+ 
+}

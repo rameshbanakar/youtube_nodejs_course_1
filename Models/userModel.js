@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "password is required"],
     minlength: 6,
+    select: false,
   },
   confirmPassword: {
     type: String,
@@ -28,6 +29,7 @@ const userSchema = new mongoose.Schema({
       message: "password and confirm password is not matching ",
     },
   },
+  passwordChangedAt: Date,
 });
 
 userSchema.pre("save", async function (next) {
@@ -39,6 +41,11 @@ userSchema.pre("save", async function (next) {
     next()
   }
 });
-
+userSchema.methods.isPasswordChangedAt = async function (timeStamp) {
+  if (this.passwordChangedAt) {
+    console.log(this.passwordChangedAt.getTime(), timeStamp);
+  }
+  return false;
+};
 const userModel = mongoose.model("users", userSchema);
 module.exports = userModel;
