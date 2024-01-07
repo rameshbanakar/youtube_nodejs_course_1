@@ -73,10 +73,14 @@ exports.protect = async (req, res, next) => {
     if (!user) {
       return res.send("user with the given token doesn't exist");
     }
+
     if (user.isPasswordChangedAt(decode.iat)) {
       return res
         .status(401)
-        .send("password has changed recently,Please login again");
+        .send({
+          status: "failed",
+          message: "password has changed recently,Please login again",
+        });
     }
     req.user = user;
 
@@ -84,4 +88,16 @@ exports.protect = async (req, res, next) => {
   } catch (error) {
     return res.send(error.message);
   }
+};
+
+exports.restrict = (role) => {
+  return (req, res, next) => {
+    if (req.user.role !== role) {
+      return res.status(403).send({
+        status: "failed",
+        message: "user don't have permission to perform this task",
+      });
+    }
+    next();
+  };
 };

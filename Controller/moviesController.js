@@ -74,7 +74,7 @@ exports.addNewMovie = async (req, res) => {
 exports.deleteMovie=async(req,res)=>{
   try {
     const movie = await Movies.findByIdAndDelete(req.params.id);
-    res.status(204).send({
+    res.send({
       status:"success",
       deletedMovie:movie
     })

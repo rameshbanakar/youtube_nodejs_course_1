@@ -7,13 +7,16 @@ const {
   updateMovies,
   validateBody,
   movieStat,
-  deleteMovie
+  deleteMovie,
 } = require("../Controller/moviesController");
-const { protect } = require("../Controller/userController");
+const { protect, restrict } = require("../Controller/userController");
 
 Router.route("/")
-  .get(protect,getAllMovies)
+  .get(protect, getAllMovies)
   .post(protect, validateBody, addNewMovie);
 Router.route("/stats").get(movieStat);
-Router.route("/:id").get(getMoviesById).put(updateMovies).delete(deleteMovie);
+Router.route("/:id")
+  .get(getMoviesById)
+  .put(updateMovies)
+  .delete(protect, restrict("admin"), deleteMovie);
 module.exports = Router;
