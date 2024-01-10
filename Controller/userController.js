@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const custumError = require("./errorHandler");
 const util = require("util");
 const sendMail = require("../Utils/mailer");
+const crypto = require("crypto");
 exports.signupUser = async (req, res, next) => {
   try {
     let newUser = req.body;
@@ -116,30 +117,55 @@ exports.forgotPassword = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
     //3.send the token back to the user email id
-    const resetUrl = `${req.protocol}//${req.get(
+    const resetUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/user/resetPassword/${resetToken}`;
+    )}/api/users/resetPassword/${resetToken}`;
     const message = `we have received password reset request,please use the following the link to reset the password.\n\n${resetUrl}`;
     try {
-       await sendMail({
-         email: user.email,
-         subject: "Password Reset Request",
-         message: message,
-       });
-       res.status(200).send({
-        status:"success",
-        message:"password reset link has been sent to the email"
-       })
+      await sendMail({
+        email: user.email,
+        subject: "Password Reset Request",
+        message: message,
+      });
+      return res.status(200).send({
+        status: "success",
+        message: "password reset link has been sent to the email",
+      });
     } catch (error) {
-      user.passwordResetToken=undefined;
-      user.passwordExpireDate=undefined;
-      user.save({validateBeforeSave:false})
-      res.send({message:error.message})
-      next()
+      user.passwordResetToken = undefined;
+      user.passwordExpireDate = undefined;
+      user.save({ validateBeforeSave: false });
+      return res.send({ message: error.message });
     }
-   
   } catch (error) {
-    console.log(error.message);
+    return res.send({ message: error.message });
   }
 };
-exports.passwordReset = async (req, res, next) => {};
+
+exports.passwordReset = async (req, res, next) => {
+  try {
+    const token = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordExpireDate: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.send("password reset link has been expired");
+    }
+    user.password = req.body.password;
+    user.confirmPassword = req.body.confirmPassword;
+    user.passwordChangedAt = Date.now();
+    user.passwordResetToken = undefined;
+    user.passwordExpireDate = undefined;
+    user.save();
+    return res.send({
+      status: "success",
+      message: "password has been changed successfully",
+    });
+  } catch (error) {
+    return res.send({ status: "failed", message: error.message });
+  }
+};
