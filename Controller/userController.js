@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const custumError = require("./errorHandler");
 const util = require("util");
+const sendMail = require("../Utils/mailer");
 exports.signupUser = async (req, res, next) => {
   try {
     let newUser = req.body;
@@ -75,12 +76,10 @@ exports.protect = async (req, res, next) => {
     }
 
     if (user.isPasswordChangedAt(decode.iat)) {
-      return res
-        .status(401)
-        .send({
-          status: "failed",
-          message: "password has changed recently,Please login again",
-        });
+      return res.status(401).send({
+        status: "failed",
+        message: "password has changed recently,Please login again",
+      });
     }
     req.user = user;
 
@@ -101,3 +100,46 @@ exports.restrict = (role) => {
     next();
   };
 };
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    //1.get the user using the mentioned email id
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.send({
+        status: "failed",
+        message: "user doesn't exist with given mail id",
+      });
+    }
+    //2.genrerate the random token to reset the password
+    const resetToken = user.createResetPasswordToken();
+
+    await user.save({ validateBeforeSave: false });
+    //3.send the token back to the user email id
+    const resetUrl = `${req.protocol}//${req.get(
+      "host"
+    )}/api/user/resetPassword/${resetToken}`;
+    const message = `we have received password reset request,please use the following the link to reset the password.\n\n${resetUrl}`;
+    try {
+       await sendMail({
+         email: user.email,
+         subject: "Password Reset Request",
+         message: message,
+       });
+       res.status(200).send({
+        status:"success",
+        message:"password reset link has been sent to the email"
+       })
+    } catch (error) {
+      user.passwordResetToken=undefined;
+      user.passwordExpireDate=undefined;
+      user.save({validateBeforeSave:false})
+      res.send({message:error.message})
+      next()
+    }
+   
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+exports.passwordReset = async (req, res, next) => {};
